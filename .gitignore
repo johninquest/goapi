@@ -1,2 +1,31 @@
+# Binary
+/bin/
+/tmp/
+
+# Database
+*.db
+/data/
+
+# Environment
 .env
-tmp/
+.env.local
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# OS specific
+.DS_Store
