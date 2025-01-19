@@ -5,47 +5,39 @@ import (
 	"log"
 	"os"
 
+	"goapi/internal/database"
+	"goapi/internal/routes"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
-	"goapi/internal/routes"
 )
-
-// Custom middleware - like Express middleware
-/* func authMiddleware(c *fiber.Ctx) error {
-	// Get token from header
-	token := c.Get("Authorization")
-
-	if token == "" {
-		return c.Status(401).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	// Continue to next middleware/handler
-	return c.Next()
-} */
 
 func main() {
 	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000" // default port if not specified
+	// Initialize SQLite database
+	db, err := database.NewSQLiteDB()
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+	defer db.Close()
+
+	// Run migrations
+	if err := database.RunMigrations(db); err != nil {
+		log.Fatal("Error running migrations:", err)
 	}
 
 	// Initialize Fiber
 	app := fiber.New()
+	app.Use(logger.New())
 
 	// Setup routes
 	routes.UserRoutes(app)
-
-	// Global middleware - like app.use() in Express
-	app.Use(logger.New())
+	routes.PolicyRoutes(app, db)
 
 	// Public routes
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -54,16 +46,10 @@ func main() {
 		})
 	})
 
-	/* // Protected routes group
-	api := app.Group("/api", authMiddleware) // Apply middleware to group
-
-	api.Get("/protected", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"message": "Protected route",
-		})
-	}) */
-
 	// Start server
-	// log.Fatal(app.Listen(":3000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "5000"
+	}
 	log.Fatal(app.Listen(fmt.Sprintf(":%s", port)))
 }
