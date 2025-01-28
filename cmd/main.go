@@ -36,7 +36,8 @@ func main() {
 	app.Use(logger.New())
 
 	// Setup routes
-	routes.UserRoutes(app)
+	routes.UserRoutes(app) 
+	routes.HelloRoutes(app)
 	routes.PolicyRoutes(app, db)
 
 	// Public routes
